@@ -19,11 +19,19 @@
         @component('components.header')
         @endcomponent
         <div class="container mt-5" id="app">
-            <h5>@{{progress}}</h5>
+            {{-- <h5>@{{progress}}</h5>
             <hr>
-            <h5>@{{title}}</h5>
+            <h5>@{{title}}</h5> --}}
             <hr>
-            <div class="progress">
+            {{-- @if(!is_null($batch)) --}}
+            <div class="mt-4 import-div" style="display: none">
+                Uploading
+                <br>
+                <span id="processedJob">0</span>  completed out of <span id="totalJob">0</span>
+                <span id="progressJob">(0%)</span>
+            </div>
+            {{-- @endif --}}
+            {{-- <div class="progress">
                 <div class="progress-bar progress-bar-striped progress-bar-animated" 
                     role="progressbar" 
                     :aria-valuenow="progressPercentage" 
@@ -32,70 +40,47 @@
                     :style="`width: ${progressPercentage}%;`">
                     @{{progressPercentage}}%
                 </div>
-            </div>
+            </div> --}}
         </div>
         {{-- <script src="https://unpkg.com/vue@3"></script> --}}
         {{-- <script src="https://unpkg.com/axios@1.1.2/dist/axios.min.js"></script> --}}
         <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.5.0/axios.min.js"></script>
-        <script type="text/javascript">
-            const app = {
-                data(){
-                    return {
-                        progress: 'Progress page',
-                        title: 'Progress of Uploads',
-                        progressPercentage: 0,
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        @if(session()->has('lastBatchId'))
+            <script type="text/javascript">
+
+                $('.import-div').show()
+                const callData = setInterval(() => {
+                    axios.get('/progress/call-batch-progress', {
                         params: {
-                            id: null
+                            id: "{{ session()->get('lastBatchId') }}",
                         }
-                    }
-                },
-                methods: {
-                    checkIfIdPresent(){
-                        const urlSearchParams = new URLSearchParams(window.location.search);
-                        const params = Object.fromEntries(urlSearchParams.entries());
-
-                        if (params.id) {
-                            this.params.id = params.id;
+                    }).then(function(response){
+                        console.log(response)
+                        $('#processedJob').html(response.data.processedJob)
+                        $('#totalJob').html(response.data.totalJob)
+                        $('#progressJob').html(response.data.progressJob +'%')
+                        if (parseInt(response.data.progressJob) == 100) {
+                            console.log('clearInterval: '+ self.progressPercentage);
+                            clearInterval(callData);
                         }
-                    },
-                    getUploadProgress(){
-                        let self = this
-                        this.checkIfIdPresent();
+                    })
+                }, 2000);
 
-                        //Get progress data.
-                        let progressResponse = setInterval(() => {
-                            axios.get('/progress/data', {
-                                params: {
-                                    id: self.params.id ? self.params.id : "{{ session()->get('lastBatchId') }}",
-                                }
-                            }).then(function(response){
-                                // console.log(response.data);
-                                let totalJobs = parseInt(response.data.total_jobs);
-                                let pendingJobs   = parseInt(response.data.pending_jobs);
-                                let completedJobs = totalJobs - pendingJobs;
+                // $(function() {
+                //     const lastBatchId = "{{ session()->get('lastBatchId') }}"
+                //     console.log(lastBatchId)
 
-                                if (pendingJobs == 0) {
-                                    self.progressPercentage = 100
-                                } else {
-                                    self.progressPercentage = 
-                                    parseInt(completedJobs/totalJobs * 100).toFixed(0);
-                                }
-
-                                if (parseInt(self.progressPercentage) >= 100 || isNaN(self.progressPercentage)) {
-                                    console.log('clearInterval: '+ self.progressPercentage);
-                                    clearInterval(progressResponse);
-                                }
-                                console.log(self.progressPercentage);
-                            })
-                        }, 2000);
-                    }
-                },
-                created() {
-                    this.getUploadProgress();
-                },
-            }
-            Vue.createApp(app).mount("#app")
-        </script>
+                //     if (lastBatchId != 'undefined') {
+                //         callData()
+                //     }
+                // })
+            </script>
+        @else
+            <script>
+                $('.import-div').hide()
+            </script>
+        @endif
     </body>
 </html>

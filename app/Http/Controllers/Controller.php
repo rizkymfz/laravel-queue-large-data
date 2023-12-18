@@ -12,42 +12,42 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, ValidatesRequests;
 
-    public function uploadFile(Request $request)
-    {
-        try {
-            if ($request->hasFile('csvFile')) {
-                $filename = $request->csvFile->getClientOriginalName();
-                $fileWithpath = public_path('uploads'). '/' . $filename;
+    // public function uploadFile(Request $request)
+    // {
+    //     try {
+    //         if ($request->hasFile('csvFile')) {
+    //             $filename = $request->csvFile->getClientOriginalName();
+    //             $fileWithpath = public_path('uploads'). '/' . $filename;
 
-                if (!file_exists($fileWithpath)) {
-                    $request->csvFile->move(public_path('upload'), $filename);
-                }
+    //             if (!file_exists($fileWithpath)) {
+    //                 $request->csvFile->move(public_path('upload'), $filename);
+    //             }
 
-                $header = null;
-                $dataFromCsv = [];
-                $records = array_map('str_getcsv', file($fileWithpath));
+    //             $header = null;
+    //             $dataFromCsv = [];
+    //             $records = array_map('str_getcsv', file($fileWithpath));
 
-                foreach ($records as $record) {
-                    if (!$header)
-                        $header = $record;
-                    else
-                        $dataFromCsv[] = $record;
-                }
+    //             foreach ($records as $record) {
+    //                 if (!$header)
+    //                     $header = $record;
+    //                 else
+    //                     $dataFromCsv[] = $record;
+    //             }
 
-                $dataFromCsv = array_chunk($dataFromCsv, 300);
-                $employeeData = [];
+    //             $dataFromCsv = array_chunk($dataFromCsv, 300);
+    //             $employeeData = [];
 
-                foreach ($dataFromCsv as $key => $dataCsv) {
-                    foreach ($dataCsv as $value) {
-                        $employeeData[$key][] = array_combine($header, $value);
-                    }
-                    // ProcessEmployees::dispatch($employeeData[$key]);
-                }
+    //             foreach ($dataFromCsv as $key => $dataCsv) {
+    //                 foreach ($dataCsv as $value) {
+    //                     $employeeData[$key][] = array_combine($header, $value);
+    //                 }
+    //                 // ProcessEmployees::dispatch($employeeData[$key]);
+    //             }
 
-                dd($employeeData);
-            }
-        } catch (\Throwable $th) {
-            //throw $th;
-        }
-    }
+    //             dd($employeeData);
+    //         }
+    //     } catch (\Throwable $th) {
+    //         //throw $th;
+    //     }
+    // }
 }

@@ -19,7 +19,11 @@ class UploadController extends Controller
 
     public function progress()
     {
-        return view('progress');
+        $batch = null;
+        if (request()->id) {
+            $batch = Bus::findBatch(request()->id);
+        }
+        return view('progress', compact('batch'));
     }
 
     /**
@@ -98,6 +102,34 @@ class UploadController extends Controller
                 return  response()->json($response);
             }
 
+        } catch (Exception $e) {
+            Log::error($e);
+            dd($e);
+        }
+    }
+
+    public function callBatchProgress(Request $request)
+    {
+        $batchId = $request->id ?? session()->get('lastBatchId');
+
+        try {
+            $batch = Bus::findBatch($batchId);
+
+            if ($batch) {
+
+                if ($batch->progress() >= 100) {
+                    session()->forget('lastBatchId');
+                }
+
+                $response = [
+                    'processedJob' => $batch->processedJobs(),
+                    'totalJob'     => $batch->totalJobs,
+                    'progressJob'  => $batch->progress()
+                ];
+
+                return response()->json($response);
+            }
+            
         } catch (Exception $e) {
             Log::error($e);
             dd($e);
